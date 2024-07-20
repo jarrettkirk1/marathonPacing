@@ -1,91 +1,54 @@
+import os
 import requests
+from bs4 import BeautifulSoup
+import pandas as pd
 
-def get_strava_data(access_token, activity_id):
-    url = f"https://www.strava.com/activities/{activity_id}"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(url, headers=headers)
+# URL of the main results page
+url = "https://results.baa.org/2024/?event_main_group=runner&num_results=25&pid=list&pidp=start&search%5Bsex%5D=M&search%5Bage_class%5D=%25&event=R&favorite_remove=9TGHS6FF19F091"
+
+# Send a GET request to the URL
+response = requests.get(url)
+soup = BeautifulSoup(response.content, 'html.parser')
+
+# Extract runner detail page links
+runner_links = []
+for a_tag in soup.find_all('a', href=True):
+    if "content=detail" in a_tag['href']:
+        runner_links.append(a_tag['href'])
+
+print(f"Found {len(runner_links)} runner links.")
+
+# Base URL for constructing full URLs
+base_url = "https://results.baa.org/2024/"
+
+# List to store data
+runners_data = []
+
+# Loop through each runner's link and scrape the splits data
+for link in runner_links:
+    runner_url = base_url + link
+    runner_response = requests.get(runner_url)
+    runner_soup = BeautifulSoup(runner_response.content, 'html.parser')
     
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Failed to fetch data. Status code: {response.status_code}")
-        return None
+    # Extract splits data from the correct table
+    splits_table = runner_soup.find('div', class_='box-splits').find('tbody')
+    if splits_table:
+        for row in splits_table.find_all('tr'):
+            split_data = {}
+            split_data['Split'] = row.find('th', class_='desc').text.strip()
+            split_data['Split Time'] = row.find('td', class_='time').text.strip()
+            runners_data.append(split_data)
 
-# Example usage
-access_token = '2a40545729615984b05904a0733894414f687f7d'
-activity_id = '2292639868'  # Replace with your actual activity ID
-activity_data = get_strava_data(access_token, activity_id)
+# Convert to DataFrame
+df = pd.DataFrame(runners_data, columns=['Split', 'Split Time'])
 
-if activity_data:
-    print(activity_data)
+# Display the DataFrame
+print(df.head())
 
-# -------------------------------------------------------------------------
+# Print the current working directory
+print(f"Current working directory: {os.getcwd()}")
 
-# import requests
-
-# def get_access_token(client_id, client_secret, refresh_token):
-#     url = 'https://www.strava.com/oauth/token'
-#     payload = {
-#         'client_id': client_id,
-#         'client_secret': client_secret,
-#         'grant_type': 'refresh_token',
-#         'refresh_token': refresh_token
-#     }
-#     response = requests.post(url, data=payload)
-#     if response.status_code == 200:
-#         return response.json()
-#     else:
-#         print(f"Failed to refresh token. Status code: {response.status_code}")
-#         return None
-
-# def get_strava_data(access_token, activity_id):
-#     url = f"https://www.strava.com/api/v3/activities/{activity_id}"
-#     headers = {"Authorization": f"Bearer {access_token}"}
-#     response = requests.get(url, headers=headers)
-#     if response.status_code == 200:
-#         return response.json()
-#     elif response.status_code == 404:
-#         print(f"Activity not found. Status code: {response.status_code}")
-#     elif response.status_code == 401:
-#         print(f"Unauthorized. Status code: {response.status_code}")
-#     else:
-#         print(f"Failed to fetch data. Status code: {response.status_code}")
-#     return None
-
-# # Example usage
-# client_id = '130721'
-# client_secret = 'caafd3966bf5e5df54287f26b7efd361d2f1d1de'
-# refresh_token = '2da7dc55655bfa048c3c19d0583a7bdd7dbb8da8'
-# activity_id = '2292639868'  # Replace with your actual activity ID
-
-# # Refresh the access token
-# token_data = get_access_token(client_id, client_secret, refresh_token)
-# if token_data:
-#     access_token = token_data['access_token']
-#     # Fetch the activity data
-#     activity_data = get_strava_data(access_token, activity_id)
-#     if activity_data:
-#         print(activity_data)
-
-# -------------------------------------------------------------------------
-
-# from __future__ import print_function
-# import time
-# import swagger_client
-# from swagger_client.rest import ApiException
-# from pprint import pprint
-
-# # Configure OAuth2 access token for authorization: strava_oauth
-# swagger_client.configuration.access_token = '2a40545729615984b05904a0733894414f687f7d'  # Replace with your actual access token
-
-# # Create an instance of the API class
-# api_instance = swagger_client.ActivitiesApi()
-# id = 2292639868  # Replace with your actual activity ID
-# includeAllEfforts = True  # To include all segment efforts. (optional)
-
-# try: 
-#     # Get Activity
-#     api_response = api_instance.getActivityById(id, includeAllEfforts=includeAllEfforts)
-#     pprint(api_response)
-# except ApiException as e:
-#     print("Exception when calling ActivitiesApi->getActivityById: %s\n" % e)
+# Save to CSV
+csv_path = os.path.join(os.getcwd(), 'boston_marathon_splits.csv')
+df.to_csv(csv_path, index=False)
+print(f"CSV file saved at: {csv_path}")
