@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 
 # URL of the main results page
-url = "https://results.baa.org/2024/?event_main_group=runner&num_results=25&pid=list&pidp=start&search%5Bsex%5D=M&search%5Bage_class%5D=%25&event=R&favorite_remove=9TGHS6FF19F091"
+url = "https://results.baa.org/2024/?event_main_group=runner&num_results=1000&pid=list&pidp=start&search%5Bsex%5D=M&search%5Bage_class%5D=%25&event=R&favorite_remove=9TGHS6FF19F091"
 
 # Send a GET request to the URL
 response = requests.get(url)

@@ -47,18 +47,6 @@ def plot_elevation_and_pacing():
     csv_file_path = 'boston_marathon_min_km_pivoted.csv'
     pacing_df, split_distances = load_pacing_data(csv_file_path)
 
-    # Get the first athlete's data
-    first_athlete = pacing_df.iloc[0]
-    athlete_name = first_athlete['Athlete Name']
-    min_mile_values = first_athlete[1:]  # Exclude the 'Athlete Name' column
-
-    # Print out all the plot points
-    print("Plot points (distance, min/mile):")
-    for distance, min_mile in zip(split_distances, min_mile_values):
-        if not pd.isna(min_mile):
-            min_mile_numeric = convert_pace_to_numeric(min_mile)
-            print(f"Distance: {distance:.2f} miles, Pace: {min_mile} min/mile (Numeric: {min_mile_numeric:.2f})")
-    
     # Create the plot
     fig, ax1 = plt.subplots(figsize=(12, 6))
 
@@ -76,11 +64,14 @@ def plot_elevation_and_pacing():
     min_pace = 4.5  # Minimum pace (min/mile)
     max_pace = 7.0  # Maximum pace (min/mile)
     
-    # Plot red dots at the split distances and corresponding min_mile values
-    for distance, min_mile in zip(split_distances, min_mile_values):
-        if not pd.isna(min_mile):
-            min_mile_numeric = convert_pace_to_numeric(min_mile)
-            ax2.scatter(distance, min_mile_numeric, color='red')
+    # Plot red dots at the split distances and corresponding min_mile values for all athletes
+    for idx, row in pacing_df.iterrows():
+        athlete_name = row['Athlete Name']
+        min_mile_values = row[1:]  # Exclude the 'Athlete Name' column
+        for distance, min_mile in zip(split_distances, min_mile_values):
+            if not pd.isna(min_mile):
+                min_mile_numeric = convert_pace_to_numeric(min_mile)
+                ax2.scatter(distance, min_mile_numeric, color='red', alpha=0.3)
     
     ax2.set_ylabel('Pace (min/mile)', color='red')
     ax2.set_ylim(max_pace, min_pace)  # Set pace scale inversely
@@ -90,7 +81,7 @@ def plot_elevation_and_pacing():
     ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: format_numeric_to_pace(x)))
 
     # Add titles and legends
-    plt.title('Boston Marathon Elevation Profile with Pacing Data')
+    plt.title('Boston Marathon Elevation Profile with Pacing Data for All Runners')
     fig.tight_layout()  # To ensure the labels don't overlap
     fig.legend(loc='upper right', bbox_to_anchor=(1,1), bbox_transform=ax1.transAxes)
 
