@@ -30,25 +30,34 @@ for link in runner_links:
     runner_response = requests.get(runner_url)
     runner_soup = BeautifulSoup(runner_response.content, 'html.parser')
     
+    # Extract athlete's name
+    name_tag = runner_soup.find('td', class_='f-__fullname')
+    athlete_name = name_tag.text.strip() if name_tag else 'Unknown'
+    
     # Extract splits data from the correct table
     splits_table = runner_soup.find('div', class_='box-splits').find('tbody')
     if splits_table:
         for row in splits_table.find_all('tr'):
-            split_data = {}
-            split_data['Split'] = row.find('th', class_='desc').text.strip()
-            split_data['Split Time'] = row.find('td', class_='time').text.strip()
+            split_data = {
+                'Athlete Name': athlete_name,
+                'Split': row.find('th', class_='desc').text.strip(),
+                'Split Time': row.find('td', class_='time').text.strip()
+            }
             runners_data.append(split_data)
 
 # Convert to DataFrame
-df = pd.DataFrame(runners_data, columns=['Split', 'Split Time'])
+df = pd.DataFrame(runners_data, columns=['Athlete Name', 'Split', 'Split Time'])
+
+# Pivot the data
+pivot_df = df.pivot(index='Athlete Name', columns='Split', values='Split Time').reset_index()
 
 # Display the DataFrame
-print(df.head())
+print(pivot_df.head())
 
 # Print the current working directory
 print(f"Current working directory: {os.getcwd()}")
 
 # Save to CSV
-csv_path = os.path.join(os.getcwd(), 'boston_marathon_splits.csv')
-df.to_csv(csv_path, index=False)
+csv_path = os.path.join(os.getcwd(), 'boston_marathon_splits_pivoted.csv')
+pivot_df.to_csv(csv_path, index=False)
 print(f"CSV file saved at: {csv_path}")
