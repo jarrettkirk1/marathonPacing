@@ -1,10 +1,17 @@
+import os
 import gpxpy
 import gpxpy.gpx
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Define the absolute path to the GPX file
+gpx_file_path = os.path.expanduser('~/marathonPacing/Boston_Marathon_Still_can_t_believe_that_s_a_real_thing_that_happened_.gpx')
+
+# Check if the file exists
+if not os.path.isfile(gpx_file_path):
+    raise FileNotFoundError(f"No such file or directory: '{gpx_file_path}'")
+
 # Load the GPX file
-gpx_file_path = '/mnt/data/Boston_Marathon_Still_can_t_believe_that_s_a_real_thing_that_happened_.gpx'
 with open(gpx_file_path, 'r') as gpx_file:
     gpx = gpxpy.parse(gpx_file)
 
