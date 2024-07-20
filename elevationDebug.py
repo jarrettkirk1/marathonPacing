@@ -2,7 +2,7 @@ import os
 import gpxpy
 
 # Path to the GPX file
-gpx_file_path = os.path.expanduser('~/marathonPacing/Boston_Marathon_Still_can_t_believe_that_s_a_real_thing_that_happened_.gpx')
+gpx_file_path = os.path.expanduser('/Users/jarrettkirk/marathonPacing/Boston_marathon_debut_2_11_18_.gpx')
 
 # Function to read the GPX file and print the elevation of the first point
 def check_start_elevation(gpx_file_path):

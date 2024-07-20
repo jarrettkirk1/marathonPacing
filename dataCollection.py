@@ -24,7 +24,7 @@ base_url = "https://results.baa.org/2024/"
 # List to store data
 runners_data = []
 
-# Loop through each runner's link and scrape the splits data
+# Loop through each runner's link and scrape the "min_km" data
 for link in runner_links:
     runner_url = base_url + link
     runner_response = requests.get(runner_url)
@@ -34,22 +34,30 @@ for link in runner_links:
     name_tag = runner_soup.find('td', class_='f-__fullname')
     athlete_name = name_tag.text.strip() if name_tag else 'Unknown'
     
-    # Extract splits data from the correct table
+    # Extract "min_km" data from the correct table
     splits_table = runner_soup.find('div', class_='box-splits').find('tbody')
     if splits_table:
         for row in splits_table.find_all('tr'):
+            split = row.find('th', class_='desc').text.strip()
+            min_km = row.find('td', class_='min_km').text.strip() if row.find('td', class_='min_km') else None
             split_data = {
                 'Athlete Name': athlete_name,
-                'Split': row.find('th', class_='desc').text.strip(),
-                'Split Time': row.find('td', class_='time').text.strip()
+                'Split': split,
+                'min_km': min_km
             }
             runners_data.append(split_data)
 
 # Convert to DataFrame
-df = pd.DataFrame(runners_data, columns=['Athlete Name', 'Split', 'Split Time'])
+df = pd.DataFrame(runners_data, columns=['Athlete Name', 'Split', 'min_km'])
 
 # Pivot the data
-pivot_df = df.pivot(index='Athlete Name', columns='Split', values='Split Time').reset_index()
+pivot_df = df.pivot(index='Athlete Name', columns='Split', values='min_km').reset_index()
+
+# Specify the order of columns
+column_order = ['Athlete Name', '5K', '10K', '15K', '20K', 'HALF', '25K', '30K', '20 Miles', '21 Miles', '35K', '23 Miles', '24 Miles', '40K', '25.2 Miles', 'Finish Net']
+
+# Reorder the columns
+pivot_df = pivot_df[column_order]
 
 # Display the DataFrame
 print(pivot_df.head())
@@ -58,6 +66,6 @@ print(pivot_df.head())
 print(f"Current working directory: {os.getcwd()}")
 
 # Save to CSV
-csv_path = os.path.join(os.getcwd(), 'boston_marathon_splits_pivoted.csv')
+csv_path = os.path.join(os.getcwd(), 'boston_marathon_min_km_pivoted.csv')
 pivot_df.to_csv(csv_path, index=False)
 print(f"CSV file saved at: {csv_path}")

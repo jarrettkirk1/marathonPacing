@@ -5,7 +5,7 @@ import numpy as np
 
 # Function to extract elevation data from a GPX file
 def extract_elevation_data():
-    gpx_file_path = os.path.expanduser('~/Boston_marathon_debut_2_11_18_.gpx')
+    gpx_file_path = os.path.expanduser('~/marathonPacing/Boston_Marathon_Still_can_t_believe_that_s_a_real_thing_that_happened_.gpx')
 
     with open(gpx_file_path, 'r') as gpx_file:
         gpx = gpxpy.parse(gpx_file)
@@ -34,7 +34,7 @@ def extract_elevation_data():
                     total_distance = 0  # Start from 0 for the first point
                 
                 distances.append(total_distance)
-                elevations.append(point.elevation)
+                elevations.append(point.elevation * 3.281)  # Convert meters to feet
                 previous_point = point
 
     distances = [d * 0.621371 for d in distances]  # Convert km to miles
