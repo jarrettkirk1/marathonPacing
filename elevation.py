@@ -1,59 +1,48 @@
 import os
 import gpxpy
 import gpxpy.gpx
-import matplotlib.pyplot as plt
 import numpy as np
 
-# Define the absolute path to the GPX file
-gpx_file_path = os.path.expanduser('~/marathonPacing/Boston_Marathon_Still_can_t_believe_that_s_a_real_thing_that_happened_.gpx')
+# Function to extract elevation data from a GPX file
+def extract_elevation_data():
+    gpx_file_path = os.path.expanduser('~/marathonPacing/Boston_Marathon_Still_can_t_believe_that_s_a_real_thing_that_happened_.gpx')
 
-# Check if the file exists
-if not os.path.isfile(gpx_file_path):
-    raise FileNotFoundError(f"No such file or directory: '{gpx_file_path}'")
+    with open(gpx_file_path, 'r') as gpx_file:
+        gpx = gpxpy.parse(gpx_file)
+    
+    elevations = []
+    distances = []
 
-# Load the GPX file
-with open(gpx_file_path, 'r') as gpx_file:
-    gpx = gpxpy.parse(gpx_file)
+    def haversine(lon1, lat1, lon2, lat2):
+        R = 6371  # Radius of the Earth in km
+        dlon = np.radians(lon2 - lon1)
+        dlat = np.radians(lon2 - lat1)
+        a = np.sin(dlat / 2) * np.sin(dlat / 2) + np.cos(np.radians(lat1)) * np.cos(np.radians(lat2)) * np.sin(dlon / 2) * np.sin(dlon / 2)
+        c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+        distance = R * c  # Distance in km
+        return distance
 
-# Extract elevation data
-elevations = []
-distances = []
+    total_distance = 0
+    previous_point = None
+    for track in gpx.tracks:
+        for segment in track.segments:
+            for point in segment.points:
+                if previous_point:
+                    distance = haversine(previous_point.longitude, previous_point.latitude, point.longitude, point.latitude)
+                    total_distance += distance
+                else:
+                    total_distance = 0  # Start from 0 for the first point
+                
+                distances.append(total_distance)
+                elevations.append(point.elevation)
+                previous_point = point
 
-# Helper function to calculate distance between two points
-def haversine(lon1, lat1, lon2, lat2):
-    R = 6371  # Radius of the Earth in km
-    dlon = np.radians(lon2 - lon1)
-    dlat = np.radians(lat2 - lat1)
-    a = np.sin(dlat/2) * np.sin(dlat/2) + np.cos(np.radians(lat1)) * np.cos(np.radians(lat2)) * np.sin(dlon/2) * np.sin(dlon/2)
-    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1-a))
-    distance = R * c  # Distance in km
-    return distance
+    distances = [d * 0.621371 for d in distances]  # Convert km to miles
+    return distances, elevations
 
-# Iterate through track points
-total_distance = 0
-previous_point = None
-for track in gpx.tracks:
-    for segment in track.segments:
-        for point in segment.points:
-            if previous_point:
-                distance = haversine(previous_point.longitude, previous_point.latitude, point.longitude, point.latitude)
-                total_distance += distance
-            else:
-                total_distance = 0  # Start from 0 for the first point
-            
-            distances.append(total_distance)
-            elevations.append(point.elevation)
-            previous_point = point
+# Save the data for later use
+distances, elevations = extract_elevation_data()
+np.save('distances.npy', distances)
+np.save('elevations.npy', elevations)
 
-# Convert distances from km to miles
-distances = [d * 0.621371 for d in distances]  # 1 km = 0.621371 miles
-
-# Plot the elevation profile
-plt.figure(figsize=(12, 6))
-plt.plot(distances, elevations, label='Elevation Profile', color='blue')
-plt.fill_between(distances, elevations, color='lightblue')
-plt.xlabel('Distance (miles)')
-plt.ylabel('Elevation (feet)')
-plt.title('Boston Marathon Elevation Profile')
-plt.legend()
-plt.show()
+print("Distances and elevations data saved to distances.npy and elevations.npy")
