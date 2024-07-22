@@ -88,6 +88,10 @@ df = df.groupby(['Athlete Name', 'Split'], as_index=False).mean()
 # Pivot the data
 pivot_df = df.pivot(index='Athlete Name', columns='Split', values='min_km').reset_index()
 
+# Ensure the columns are in the desired order
+desired_order = ['Athlete Name', '5K', '10K', '15K', '20K', 'HALF', '25K', '30K', '20 Miles', '21 Miles', '35K', '23 Miles', '24 Miles', '40K', '25.2 Miles', 'Finish Net']
+pivot_df = pivot_df.reindex(columns=desired_order)
+
 # Display the DataFrame
 print(pivot_df.head())
 
