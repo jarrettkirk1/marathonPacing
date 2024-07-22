@@ -1,6 +1,6 @@
 import pandas as pd
-from data_preprocessing import load_data, preprocess_pacing_data, fill_missing_values, scale_data, prepare_train_test_split
-from model_training import train_model, evaluate_model
+from scripts.data_preprocessing import load_data, preprocess_pacing_data, fill_missing_values, scale_data, prepare_train_test_split
+from scripts.model_training import train_model, evaluate_model
 
 def main():
     # Load data
