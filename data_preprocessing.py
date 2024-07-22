@@ -9,6 +9,8 @@ def load_data(file_path):
 def convert_pace_to_numeric(pace_str):
     if pd.isnull(pace_str) or pace_str == '-':
         return np.nan
+    if isinstance(pace_str, float):  # Ensure pace_str is not a float
+        return pace_str
     parts = pace_str.split(':')
     return int(parts[0]) + int(parts[1]) / 60
 
